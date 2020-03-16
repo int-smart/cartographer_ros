@@ -1,0 +1,22 @@
+session_name: cartographer_monitor
+environment:
+  # DATA_PATH: /media/abhishek/seagate/velo/Urban_Circuit/Debug
+  DATA_PATH: /media/abhishek/seagate/velo/paper_comparisiom
+  LOG_PATH: husky4_2020-02-26-12-39-00_urban_r2_beta # start 10
+  # LOG_PATH: husky2_2019-12-23-15-58-00_b198_t1_game/rosbag # start 10
+  ROBOT_NAME: husky4
+
+options:
+  default-command: /bin/bash
+
+windows:
+- window_name: Cartographer_monitor
+  focus: True
+  layout: tiled
+  shell_command_before:
+    - conda deactivate
+    - source install_isolated/setup.sh
+  panes:
+    - rosparam set /use_sim_time true; python src/core_cpu_monitor/scripts/monitor.py
+    - rosparam set /use_sim_time true; rosbag record -O $DATA_PATH/$LOG_PATH/cartographer/cpu.bag /cpu_monitor/cartographer_node/cpu
+    # - rosparam set /use_sim_time true; rosbag record -O $DATA_PATH/$LOG_PATH/cartographer/mem.bag /cpu_monitor/cartographer_node/mem

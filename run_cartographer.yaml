@@ -1,0 +1,42 @@
+session_name: cartographer
+environment:
+  # DATA_PATH: /media/abhishek/seagate/velo/paper_comparisiom #Husky4
+  DATA_PATH: /media/abhishek/seagate/velo/Urban_Circuit
+  # LOG_PATH: husky4_2020-02-26-12-39-00_urban_r2_beta # start 10
+  LOG_PATH : spot2_2020_02-25_alpha_r2/rosbag # start 10
+  ROBOT_NAME: spot2
+
+options:
+  default-command: /bin/bash
+
+windows:
+- window_name: Cartographer
+  focus: True
+  layout: tiled
+  shell_command_before:
+    - conda deactivate
+    - source install_isolated/setup.sh
+  panes:
+    - rosparam set /use_sim_time true; roslaunch cartographer_ros husky2.launch robot_name:=$ROBOT_NAME
+    # - rosparam set /use_sim_time true; sleep 2; rosbag play $DATA_PATH/$LOG_PATH/*.bag --clock --topics clock:=/clock /$ROBOT_NAME/vn100/imu_wori_wcov /tf_static /$ROBOT_NAME/velodyne_points /$ROBOT_NAME/velodyne_front/velodyne_points /$ROBOT_NAME/hero/wio_ekf/odom && rosservice call /finish_trajectory 0 && rosservice call /write_state $DATA_PATH/$LOG_PATH/cartographer/cartographer_state.pbstream && rosrun cartographer_ros cartographer_dev_pbstream_trajectories_to_rosbag -input $DATA_PATH/$LOG_PATH/cartographer/cartographer_state.pbstream -output $DATA_PATH/$LOG_PATH/cartographer/cartographer_trajectory.bag
+    # - rosparam set /use_sim_time true; sleep 2; rosbag play $DATA_PATH/$LOG_PATH/spot2_lidar*.bag $DATA_PATH/$LOG_PATH/spot2_tf*.bag $DATA_PATH/$LOG_PATH/spot2_state*.bag --clock --topics clock:=/clock /tf_static /$ROBOT_NAME/velodyne_points /$ROBOT_NAME/visual_odom && rosservice call /finish_trajectory 0 && rosservice call /write_state $DATA_PATH/$LOG_PATH/cartographer/cartographer_state.pbstream && rosrun cartographer_ros cartographer_dev_pbstream_trajectories_to_rosbag -input $DATA_PATH/$LOG_PATH/cartographer/cartographer_state.pbstream -output $DATA_PATH/$LOG_PATH/cartographer/cartographer_trajectory.bag
+    - rosparam set /use_sim_time true; sleep 2; rosbag play $DATA_PATH/$LOG_PATH/spot2_lidar*.bag $DATA_PATH/$LOG_PATH/spot2_tf*.bag $DATA_PATH/$LOG_PATH/spot2_state*.bag --clock --topics clock:=/clock /tf_static /$ROBOT_NAME/velodyne_points /$ROBOT_NAME/visual_odom && rosservice call /finish_trajectory 0 && rosservice call /write_state $DATA_PATH/$LOG_PATH/cartographer/cartographer_state.pbstream && rosrun cartographer_ros cartographer_dev_pbstream_trajectories_to_rosbag -input $DATA_PATH/$LOG_PATH/cartographer/cartographer_state.pbstream -output $DATA_PATH/$LOG_PATH/cartographer/cartographer_trajectory.bag
+    - rosparam set /use_sim_time true; rosrun tf2_ros static_transform_publisher 0 0 0 0 0 0 /base_link /$ROBOT_NAME/base_link
+    # Husky
+    # - rosparam set /use_sim_time true; rosrun topic_tools relay /$ROBOT_NAME/velodyne_points points2_1
+    # - rosparam set /use_sim_time true; rosrun topic_tools relay /$ROBOT_NAME/velodyne_front/velodyne_points points2_2
+    # Spot
+    - rosparam set /use_sim_time true; rosrun topic_tools relay /$ROBOT_NAME/velodyne_points /points2
+    # Only IMU
+    # - rosparam set /use_sim_time true; rosrun topic_tools relay /$ROBOT_NAME/vn100/imu_wori_wcov imu
+    # WIO Odom related
+    - rosparam set /use_sim_time true; rosrun cartographer_ros cartographer_spot_imu_node -input $ROBOT_NAME
+    - rosparam set /use_sim_time true; rosrun tf2_ros static_transform_publisher 0 0 0 0 0 0 /$ROBOT_NAME/base_link /$ROBOT_NAME/odom
+    # Husky
+    # - rosparam set /use_sim_time true; rosrun topic_tools relay /$ROBOT_NAME/hero/wio_ekf/odom /odom
+    # Spot
+    - rosparam set /use_sim_time true; rosrun topic_tools relay /$ROBOT_NAME/visual_odom /odom
+    # - rosbag record -O $DATA_PATH/$LOG_PATH/cartographer/combined.bag /tf /tf_static /clock /points2_1 /points2_2 /imu /odom
+# Store cartographer topics
+# rosbag record /tf /rosout /move_base_simple/goal /constraint_list /submap_list /scan_matched_points2 /clicked_point /tf_static /clock /initialpose /map /trajectory_node_list /landmark_poses_list /rosout_agg /points2_1 /points2_2 /imu
+# FOR odom: rosbag play /media/abhishek/seagate/velo/Urban_Circuit/Debug/husky2_2019-12-23-15-58-00_b198_t1_game/rosbag/husky2_*.bag --clock --topics clock:=/clock /husky2/vn100/imu_wori_wcov /tf_static /husky2/velodyne_points /husky2/velodyne_front/velodyne_points /husky2/wheel_odom --pause
