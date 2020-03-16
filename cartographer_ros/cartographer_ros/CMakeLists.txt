@@ -113,6 +113,17 @@ install(TARGETS cartographer_modified_imu_node
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
+google_binary(cartographer_spot_imu_node
+  SRCS
+    dev/spot_imu_node.cc
+)
+
+install(TARGETS cartographer_spot_imu_node
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
 google_binary(cartographer_dev_pbstream_trajectories_to_rosbag
   SRCS
   dev/pbstream_trajectories_to_rosbag_main.cc

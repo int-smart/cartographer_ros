@@ -22,6 +22,7 @@
 #include "cartographer_ros/msg_conversion.h"
 #include "cartographer_ros/time_conversion.h"
 #include "geometry_msgs/TransformStamped.h"
+#include "nav_msgs/Odometry.h"
 #include "cartographer/io/proto_stream.h"
 #include "cartographer/io/proto_stream_deserializer.h"
 #include "cartographer/mapping/pose_graph.h"
@@ -39,12 +40,11 @@ DEFINE_string(parent_frame, "map", "Frame id to use as parent frame.");
 
 namespace cartographer_ros {
 namespace {
-
+static int64_t seq = 0;
 geometry_msgs::TransformStamped ToTransformStamped(
     int64_t timestamp_uts, const std::string& parent_frame_id,
     const std::string& child_frame_id,
     const cartographer::transform::proto::Rigid3d& parent_T_child) {
-  static int64_t seq = 0;
   geometry_msgs::TransformStamped transform_stamped;
   transform_stamped.header.seq = ++seq;
   transform_stamped.header.frame_id = parent_frame_id;
@@ -73,9 +73,21 @@ void pbstream_trajectories_to_bag(const std::string& pbstream_filename,
         << " nodes.";
     for (const auto& node : trajectory.node()) {
       tf2_msgs::TFMessage tf_msg;
+      // Get the posestamped message
+      nav_msgs::Odometry pose_stamped;
+      pose_stamped.header.seq = seq;
+      pose_stamped.header.frame_id = parent_frame_id;
+      pose_stamped.header.stamp = cartographer_ros::ToRos(
+      ::cartographer::common::FromUniversal(node.timestamp()));
+      pose_stamped.pose.pose = cartographer_ros::ToGeometryMsgPose(
+      ::cartographer::transform::ToRigid3(node.pose()));
+
+      // Get the trasnformstamped message
       geometry_msgs::TransformStamped transform_stamped = ToTransformStamped(
           node.timestamp(), parent_frame_id, child_frame_id, node.pose());
       tf_msg.transforms.push_back(transform_stamped);
+      bag.write("/cartographer_odom", transform_stamped.header.stamp,
+                pose_stamped);
       bag.write(child_frame_id, transform_stamped.header.stamp,
                 transform_stamped);
       bag.write("/tf", transform_stamped.header.stamp, tf_msg);
